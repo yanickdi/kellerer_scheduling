@@ -38,4 +38,5 @@ def print_c_matrix(c_matrix, schedule):
         
     print('\nCMax: {}'.format(c_matrix[-1][-1]))
     
-main()
+if __name__ == '__main__':
+    main()
