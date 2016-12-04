@@ -1,4 +1,5 @@
 import numpy as np
+import sys
 
 class DisjunctiveGraph:
     def __init__(self, pij_matrix, sequences):
@@ -50,6 +51,54 @@ class DisjunctiveGraph:
                 if explore_cycles_dfs(node) == True:
                     return True
         return False
+        
+    def shortest_path(self, start, end):
+        """
+          Implementation of Dijkstra's shortest path algorithm.
+          adj: adjacency matrix
+          start: start node
+          end: end node
+          Returns: The length of the shortest path
+            #The first: the length of the shortest path from s to to
+            #The second a list of nodes on the shortest path, first node of the list is s, last node v
+        """
+        INF = 50
+        m1j1 = self.start[0]
+        #m1j1.addOutgoing(self.end)
+        #initialisierung
+        fertig = [] #leere menge
+        dist = {node: INF for node in self.nodes} #distanzen alle auf unendl
+        dist[start] = 0
+        #und los gehts:
+        while len(fertig) != len(self.nodes):
+            look_at = [node for node in self.nodes if node not in fertig]
+            u = min(look_at, key=lambda k: dist[k])
+            fertig.append(u)
+            #sobald wir t gefunden haben koennen wir aufhoeren
+            if u == end:
+                break
+            for v in set(u.outgoing_arcs) - set(fertig):
+                #wenn kosten zum nachbarn mit dem knoten u geringer werden wuerde, update nachbarn
+                if dist[v] > dist[u] + u.weight:
+                    dist[v] = dist[u] + u.weight
+        #fertig, jetzt muss noch rueckwaerts weg gefunden werden
+        #return d[t], get_backward_path(vor, t, s)
+        print(fertig)
+        return dist[end]
+        
+    def longest_path(self, start, end):
+        """
+          Implementation of Dijkstra's shortest path algorithm.
+          adj: adjacency matrix
+          start: start node
+          end: end node
+          Returns: The length of the shortest path
+            #The first: the length of the shortest path from s to to
+            #The second a list of nodes on the shortest path, first node of the list is s, last node v
+        """
+        for node in self.nodes:
+            node.weight = -node.weight
+        return self.shortest_path(start, end)
         
         
     class Node:
@@ -106,4 +155,4 @@ if __name__ == '__main__':
     sequences -= 1 # job one has to be 0, etc.
         
     graph = DisjunctiveGraph(pij_matrix, sequences)
-    print(graph.has_cycles())
+    print(graph.longest_path(graph.start, graph.end))
