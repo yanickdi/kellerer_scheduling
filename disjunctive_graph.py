@@ -62,28 +62,18 @@ class DisjunctiveGraph:
             #The first: the length of the shortest path from s to to
             #The second a list of nodes on the shortest path, first node of the list is s, last node v
         """
-        INF = 50
-        m1j1 = self.start[0]
-        #m1j1.addOutgoing(self.end)
-        #initialisierung
-        fertig = [] #leere menge
-        dist = {node: INF for node in self.nodes} #distanzen alle auf unendl
+        INF = sys.maxsize
+        Q = set(self.nodes)
+        dist = {node: INF for node in self.nodes}
         dist[start] = 0
-        #und los gehts:
-        while len(fertig) != len(self.nodes):
-            look_at = [node for node in self.nodes if node not in fertig]
-            u = min(look_at, key=lambda k: dist[k])
-            fertig.append(u)
-            #sobald wir t gefunden haben koennen wir aufhoeren
-            if u == end:
-                break
-            for v in set(u.outgoing_arcs) - set(fertig):
-                #wenn kosten zum nachbarn mit dem knoten u geringer werden wuerde, update nachbarn
-                if dist[v] > dist[u] + u.weight:
-                    dist[v] = dist[u] + u.weight
-        #fertig, jetzt muss noch rueckwaerts weg gefunden werden
-        #return d[t], get_backward_path(vor, t, s)
-        print(fertig)
+        
+        while len(Q) > 0:
+            u = min(Q, key= lambda node: dist[node])
+            Q.remove(u)
+            for v in u.outgoing_arcs:
+                alt = dist[u] + u.weight
+                if alt < dist[v]:
+                    dist[v] = alt
         return dist[end]
         
     def longest_path(self, start, end):
@@ -96,9 +86,19 @@ class DisjunctiveGraph:
             #The first: the length of the shortest path from s to to
             #The second a list of nodes on the shortest path, first node of the list is s, last node v
         """
-        for node in self.nodes:
-            node.weight = -node.weight
-        return self.shortest_path(start, end)
+        INF = sys.maxsize
+        Q = set(self.nodes)
+        dist = {node: -INF for node in self.nodes}
+        dist[start] = 0
+        
+        while len(Q) > 0:
+            u = max(Q, key= lambda node: dist[node])
+            Q.remove(u)
+            for v in u.outgoing_arcs:
+                alt = dist[u] + u.weight
+                if alt > dist[v]:
+                    dist[v] = alt
+        return dist[end]
         
         
     class Node:
