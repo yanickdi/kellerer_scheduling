@@ -37,6 +37,11 @@ class DisjunctiveGraph:
         m2j1 = m1j1[0]
         m2j2 = self.start[1]
         m1j2 = m2j2[0]
+        m3j2 = m1j2[0]
+        m3j1 = m2j1[0]
+        #m2j1.addOutgoing(m2j2)
+        #m3j2.addOutgoing(m3j1)
+        #m1j2.addOutgoing(m1j1)
         
         colours = {node: WHITE for node in self.nodes}
         path = []
