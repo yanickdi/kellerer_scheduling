@@ -52,30 +52,6 @@ class DisjunctiveGraph:
                     return True
         return False
         
-    def shortest_path(self, start, end):
-        """
-          Implementation of Dijkstra's shortest path algorithm.
-          adj: adjacency matrix
-          start: start node
-          end: end node
-          Returns: The length of the shortest path
-            #The first: the length of the shortest path from s to to
-            #The second a list of nodes on the shortest path, first node of the list is s, last node v
-        """
-        INF = sys.maxsize
-        Q = set(self.nodes)
-        dist = {node: INF for node in self.nodes}
-        dist[start] = 0
-        
-        while len(Q) > 0:
-            u = min(Q, key= lambda node: dist[node])
-            Q.remove(u)
-            for v in u.outgoing_arcs:
-                alt = dist[u] + u.weight
-                if alt < dist[v]:
-                    dist[v] = alt
-        return dist[end]
-        
     def longest_path(self, start, end):
         """
           Implementation of Dijkstra's shortest path algorithm.
