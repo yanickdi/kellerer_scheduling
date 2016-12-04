@@ -1,9 +1,5 @@
 import numpy as np
 
-WHITE = 0
-GREY = 1
-BLACK = 2
-
 class DisjunctiveGraph:
     def __init__(self, pij_matrix, sequences):
         """
@@ -32,40 +28,27 @@ class DisjunctiveGraph:
         """
             Checks whether this graph has cycles in it or not (only checks conjunctive arcs..)
             Algorithm: Graph Coloring Algorithm, DFS Traversal
+            Returns True if graph has cycles, false if not
         """
-        m1j1 = self.start[0]
-        m2j1 = m1j1[0]
-        m2j2 = self.start[1]
-        m1j2 = m2j2[0]
-        m3j2 = m1j2[0]
-        m3j1 = m2j1[0]
-        #m2j1.addOutgoing(m2j2)
-        #m3j2.addOutgoing(m3j1)
-        #m1j2.addOutgoing(m1j1)
+        WHITE, GREY, BLACK = 0, 1, 2        
+        def explore_cycles_dfs(start_node):
+            colours[node] = GREY
+            for adjNode in start_node.outgoing_arcs:
+                if colours[adjNode] == GREY:
+                    return True
+                
+                if colours[adjNode] == WHITE:
+                    if explore_cycles_dfs(adjNode) == True:
+                        return True
+                        
+            colours[start_node] = BLACK
+            return False
         
         colours = {node: WHITE for node in self.nodes}
-        path = []
         for node in self.nodes:
             if colours[node] == WHITE:
-                result = self._has_cycles_dfs(node, colours, path)
-                if result:
+                if explore_cycles_dfs(node) == True:
                     return True
-        return False
-        
-    def _has_cycles_dfs(self, node, colours, path):
-        colours[node] = GREY
-        path.append(node)
-        for adjNode in node.outgoing_arcs:
-            if colours[adjNode] == GREY:
-                return True
-            
-            if colours[adjNode] == WHITE:
-                result = self._has_cycles_dfs(adjNode, colours, path)
-                if result:
-                    return True
-                    
-        colours[node] = BLACK
-        path.remove(node)
         return False
         
         
