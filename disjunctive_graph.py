@@ -1,5 +1,9 @@
 import numpy as np
 
+WHITE = 0
+GREY = 1
+BLACK = 2
+
 class DisjunctiveGraph:
     def __init__(self, pij_matrix, sequences):
         """
@@ -10,12 +14,14 @@ class DisjunctiveGraph:
         """
         self.start = DisjunctiveGraph.Node(machine=None, job=None, is_start=True)
         self.end = DisjunctiveGraph.Node(machine=None, job=None, is_end=True)
+        self.nodes = set([self.start, self.end])
         for job_nr, job_sequence in enumerate(sequences):
             pre_node = self.start
             for i in range(len(job_sequence)):
                 machine_nr = job_sequence[i]
                 weight = pij_matrix[machine_nr, job_nr]
                 node = DisjunctiveGraph.Node(machine_nr, job_nr, weight=weight)
+                self.nodes.add(node)
                 pre_node.addOutgoing(node)
                 if i == len(job_sequence)-1:
                     # last machine of this job, also connect to end
@@ -25,23 +31,38 @@ class DisjunctiveGraph:
     def has_cycles(self):
         """
             Checks whether this graph has cycles in it or not (only checks conjunctive arcs..)
+            Algorithm: Graph Coloring Algorithm, DFS Traversal
         """
-        visited = []
+        m1j1 = self.start[0]
+        m2j1 = m1j1[0]
+        m2j2 = self.start[1]
+        m1j2 = m2j2[0]
         
-        def explore(node, parent):
-            if node in visited:
+        colours = {node: WHITE for node in self.nodes}
+        path = []
+        for node in self.nodes:
+            if colours[node] == WHITE:
+                result = self._has_cycles_dfs(node, colours, path)
+                if result:
+                    return True
+        return False
+        
+    def _has_cycles_dfs(self, node, colours, path):
+        colours[node] = GREY
+        path.append(node)
+        for adjNode in node.outgoing_arcs:
+            if colours[adjNode] == GREY:
                 return True
-            else:
-                visited.append(node)
-                neighbours = node.outgoing_arcs[:]
-                # the 
-                neighbours = list(filter(lambda a: a != self.end, neighbours))
-                for u in neighbours:
-                    if explore(u, node):
-                        return True
-                return False
-        return explore(self.start,None)
-    
+            
+            if colours[adjNode] == WHITE:
+                result = self._has_cycles_dfs(adjNode, colours, path)
+                if result:
+                    return True
+                    
+        colours[node] = BLACK
+        path.remove(node)
+        return False
+        
         
     class Node:
         def __init__(self, machine, job, weight=0, is_start=False, is_end=False):
