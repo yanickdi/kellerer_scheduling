@@ -18,15 +18,6 @@ class TeppichFaerberBnB():
         if branch_pos == (self.n):
             # we are at a leaf, return
             return
-        else:
-            for j in range(self.n):
-                if j not in node.fixed:
-                    child = self.Node(parent=node, fixed=node.fixed + [j], bnb=self)
-                    # only one unfixed? fix em
-                    if len(child.fixed) == self.n - 1:
-                        last_unfixed = (set(job for job in range(self.n)) - set(child.fixed)).pop()
-                        child.fixed.append(last_unfixed)
-                    node.childs.append(child)
                     
     def bound_at_node(self, node):
         sum_pj = sum(self.data['pi'])

@@ -12,18 +12,22 @@ class DisjunctiveGraph:
         self.start = DisjunctiveGraph.Node(machine=None, job=None, is_start=True)
         self.end = DisjunctiveGraph.Node(machine=None, job=None, is_end=True)
         self.nodes = set([self.start, self.end])
+        self.n_machines, self.n_jobs = pij_matrix.shape
+        self.job_sequence = {job_nr: [] for job_nr in range(self.n_jobs)}
+        
         for job_nr, job_sequence in enumerate(sequences):
             pre_node = self.start
             for i in range(len(job_sequence)):
                 machine_nr = job_sequence[i]
+                if machine_nr < 0: continue
+                self.job_sequence[job_nr].append(machine_nr)
                 weight = pij_matrix[machine_nr, job_nr]
                 node = DisjunctiveGraph.Node(machine_nr, job_nr, weight=weight)
                 self.nodes.add(node)
                 pre_node.addOutgoing(node)
-                if i == len(job_sequence)-1:
-                    # last machine of this job, also connect to end
-                    node.addOutgoing(self.end)
                 pre_node = node
+            # pre_node is last machine of this job, also connect to end
+            pre_node.addOutgoing(self.end)
         
     def has_cycles(self):
         """
@@ -51,6 +55,27 @@ class DisjunctiveGraph:
                 if explore_cycles_dfs(node) == True:
                     return True
         return False
+    
+    def findOperation(self, machine, job):
+        for node in self.nodes:
+            if not node.is_start_or_end and node.machine == machine and node.job == job:
+                return node
+        return False
+        
+    def addConjunctiveArcsFromOperation(self, operation_node):
+        added_arcs = []
+        machine = operation_node.machine
+        for node in self.nodes:
+            if node != operation_node and node.machine == machine:
+                # add here an outgoing arc from operation_node to node
+                operation_node.addOutgoing(node)
+                added_arcs.append({'from': operation_node, 'to': node})
+        return added_arcs
+        
+    def removeConjunctiveArcs(self, arc_list):
+        for arc in arc_list:
+            arc['from'].removeOutgoing(arc['to'])
+    
         
     def longest_path(self, start, end):
         """
@@ -92,6 +117,10 @@ class DisjunctiveGraph:
         def addOutgoing(self, node):
             assert not self.is_end
             self.outgoing_arcs.append(node)
+            
+        def removeOutgoing(self, node):
+            assert node in self.outgoing_arcs
+            self.outgoing_arcs.remove(node)
             
         def __getitem__(self, key):
             return self.outgoing_arcs[key]
