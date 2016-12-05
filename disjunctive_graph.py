@@ -90,7 +90,7 @@ class DisjunctiveGraph:
         return nr_cleared
     
         
-    def longest_path(self, start, end):
+    def shortest_path(self, start, end):
         """
           Implementation of Dijkstra's shortest path algorithm.
           adj: adjacency matrix
@@ -102,17 +102,25 @@ class DisjunctiveGraph:
         """
         INF = sys.maxsize
         Q = set(self.nodes)
-        dist = {node: -INF for node in self.nodes}
+        dist = {node: INF for node in self.nodes}
         dist[start] = 0
         
         while len(Q) > 0:
-            u = max(Q, key= lambda node: dist[node])
+            u = min(Q, key= lambda node: dist[node])
             Q.remove(u)
             for v in u.outgoing_arcs:
                 alt = dist[u] + u.weight
-                if alt > dist[v]:
+                if alt < dist[v]:
                     dist[v] = alt
         return dist[end]
+        
+    def longest_path(self, start, end):
+        for node in self.nodes:
+            node.weight = -node.weight
+        result = -self.shortest_path(start, end)
+        for node in self.nodes:
+            node.weight = -node.weight
+        return result
         
         
     class Node:
