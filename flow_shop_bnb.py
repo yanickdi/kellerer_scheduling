@@ -39,17 +39,19 @@ class FlowShopBnb():
         return omegas
                     
     def bound_at_node(self, node):
+        if len(node.fixed) == 3: sys.exit()
         graph = self.disj_graph
-        arcs_added = []
+        nr_arcs_added = 0
         for operation in node.fixed:
-            arcs_added.extend(graph.addConjunctiveArcsFromOperation(operation))
+            nr_arcs_added += graph.addConjunctiveArcsFromOperation(operation)
         
         if graph.has_cycles():
             # infeasible
             LB = False
         else:
             LB = graph.longest_path(graph.start, graph.end)
-        graph.removeConjunctiveArcs(arcs_added)
+            
+        nr_arcs_cleared = graph.clearConjunctiveArcs()
         print('LB: {}'.format(LB))
         return LB
         
@@ -107,3 +109,9 @@ if __name__ == '__main__':
     graph = DisjunctiveGraph(pij_matrix, sequences)
     bnb = FlowShopBnb(graph, start_upper_bound=500)
     bnb.solve()
+    
+    first = graph.findOperation(0,0)
+    sec = graph.findOperation(0,2)
+    third = graph.findOperation(1,2)
+    #bnbnode = FlowShopBnb.Node(None, [first, sec, third], bnb)
+    #bnb.bound_at_node(bnbnode)

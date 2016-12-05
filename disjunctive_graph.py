@@ -14,6 +14,7 @@ class DisjunctiveGraph:
         self.nodes = set([self.start, self.end])
         self.n_machines, self.n_jobs = pij_matrix.shape
         self.job_sequence = {job_nr: [] for job_nr in range(self.n_jobs)}
+        self.added_conjunctive_arcs = []
         
         for job_nr, job_sequence in enumerate(sequences):
             pre_node = self.start
@@ -63,18 +64,30 @@ class DisjunctiveGraph:
         return False
         
     def addConjunctiveArcsFromOperation(self, operation_node):
-        added_arcs = []
+        added_arcs = self.added_conjunctive_arcs
         machine = operation_node.machine
+        count_arcs_added = 0
         for node in self.nodes:
             if node != operation_node and node.machine == machine:
                 # add here an outgoing arc from operation_node to node
+                arc = {'from': operation_node, 'to': node}
+                opposite_arc = {'from': node, 'to': operation_node}
+                if arc in added_arcs or opposite_arc in added_arcs:
+                    continue
+                assert node not in operation_node.outgoing_arcs
                 operation_node.addOutgoing(node)
-                added_arcs.append({'from': operation_node, 'to': node})
-        return added_arcs
+                count_arcs_added += 1
+                self.added_conjunctive_arcs.append(arc)
+        return count_arcs_added
         
-    def removeConjunctiveArcs(self, arc_list):
-        for arc in arc_list:
+    def clearConjunctiveArcs(self):
+        nr_cleared = 0
+        for arc in self.added_conjunctive_arcs:
             arc['from'].removeOutgoing(arc['to'])
+            nr_cleared += 1
+        assert nr_cleared == len(self.added_conjunctive_arcs)
+        self.added_conjunctive_arcs.clear()
+        return nr_cleared
     
         
     def longest_path(self, start, end):
