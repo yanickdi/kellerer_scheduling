@@ -39,28 +39,39 @@ class FlowShopBnb():
         return omegas
                     
     def bound_at_node(self, node):
-        if len(node.fixed) == 3: sys.exit()
         graph = self.disj_graph
         nr_arcs_added = 0
+        is_leaf = False
         for operation in node.fixed:
             nr_arcs_added += graph.addConjunctiveArcsFromOperation(operation)
-        
         if graph.has_cycles():
             # infeasible
             LB = False
         else:
-            LB = graph.longest_path(graph.start, graph.end)
+            # are we at a leaf?
             
+            if len(self.getOmegas(node.fixed)) == 0:
+                is_leaf = True                
+            LB = graph.longest_path(graph.start, graph.end)
         nr_arcs_cleared = graph.clearConjunctiveArcs()
         print('LB: {}'.format(LB))
-        return LB
+        if is_leaf and LB is not False:
+            if LB < self.upper_bound:
+                print('new best solution: {}'.format(LB))
+                self.upper_bound = LB
+                return False
+        elif LB is not False and LB < self.upper_bound:
+            return True
+        else:
+            #invalid or bad lower bound
+            return False
         
         
     def solve(self):
         count = 0
         queue = deque([self.root])
         while (len(queue) > 0):
-            node = queue.popleft() #using as real queue
+            node = queue.pop() #popleft: queue, pop: stack
             print()
             print(node)
             count += 1

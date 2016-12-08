@@ -1,6 +1,8 @@
 import numpy as np
 import sys
 
+from floyd_warshall import floyd_warshall
+
 class DisjunctiveGraph:
     def __init__(self, pij_matrix, sequences):
         """
@@ -11,7 +13,7 @@ class DisjunctiveGraph:
         """
         self.start = DisjunctiveGraph.Node(machine=None, job=None, is_start=True)
         self.end = DisjunctiveGraph.Node(machine=None, job=None, is_end=True)
-        self.nodes = set([self.start, self.end])
+        self.nodes = [self.start, self.end]
         self.n_machines, self.n_jobs = pij_matrix.shape
         self.job_sequence = {job_nr: [] for job_nr in range(self.n_jobs)}
         self.added_conjunctive_arcs = []
@@ -24,7 +26,7 @@ class DisjunctiveGraph:
                 self.job_sequence[job_nr].append(machine_nr)
                 weight = pij_matrix[machine_nr, job_nr]
                 node = DisjunctiveGraph.Node(machine_nr, job_nr, weight=weight)
-                self.nodes.add(node)
+                self.nodes.append(node)
                 pre_node.addOutgoing(node)
                 pre_node = node
             # pre_node is last machine of this job, also connect to end
@@ -63,6 +65,25 @@ class DisjunctiveGraph:
                 return node
         return False
         
+    def createAdjMatrix(self, no_edge_val=sys.maxsize, diag_val=None):
+        arr = np.empty( (len(self.nodes), len(self.nodes)) )
+        for i, from_node in enumerate(self.nodes):
+            for j, to_node in enumerate(self.nodes):
+                if to_node in from_node.outgoing_arcs:
+                    arr[i,j] = from_node.weight
+                else:
+                    arr[i,j] = no_edge_val
+        if diag_val is not None:
+            for i in range(len(arr)):
+                arr[i,i] = diag_val
+        return arr
+        
+    def get_nr_edges(self):
+        arr = self.createAdjMatrix(no_edge_val=-1)
+        arr += 1
+        print(np.count_nonzero(arr))
+            
+        
     def addConjunctiveArcsFromOperation(self, operation_node):
         added_arcs = self.added_conjunctive_arcs
         machine = operation_node.machine
@@ -88,39 +109,13 @@ class DisjunctiveGraph:
         assert nr_cleared == len(self.added_conjunctive_arcs)
         self.added_conjunctive_arcs.clear()
         return nr_cleared
-    
-        
-    def shortest_path(self, start, end):
-        """
-          Implementation of Dijkstra's shortest path algorithm.
-          adj: adjacency matrix
-          start: start node
-          end: end node
-          Returns: The length of the shortest path
-            #The first: the length of the shortest path from s to to
-            #The second a list of nodes on the shortest path, first node of the list is s, last node v
-        """
-        INF = sys.maxsize
-        Q = set(self.nodes)
-        dist = {node: INF for node in self.nodes}
-        dist[start] = 0
-        
-        while len(Q) > 0:
-            u = min(Q, key= lambda node: dist[node])
-            Q.remove(u)
-            for v in u.outgoing_arcs:
-                alt = dist[u] + u.weight
-                if alt < dist[v]:
-                    dist[v] = alt
-        return dist[end]
         
     def longest_path(self, start, end):
-        for node in self.nodes:
-            node.weight = -node.weight
-        result = -self.shortest_path(start, end)
-        for node in self.nodes:
-            node.weight = -node.weight
-        return result
+        adj = self.createAdjMatrix(no_edge_val=-sys.maxsize) * -1
+        fl = floyd_warshall(adj)
+        from_index = self.nodes.index(start)
+        end_index = self.nodes.index(end)
+        return fl[from_index, end_index] * -1
         
         
     class Node:
@@ -134,14 +129,17 @@ class DisjunctiveGraph:
             # a list of tuples, the first elem in tuple is the other node,
             # the second is a integer of its weight
             self.outgoing_arcs = []
+            self.incoming_arcs = []
             
         def addOutgoing(self, node):
             assert not self.is_end
             self.outgoing_arcs.append(node)
+            node.incoming_arcs.append(self)
             
         def removeOutgoing(self, node):
             assert node in self.outgoing_arcs
             self.outgoing_arcs.remove(node)
+            node.incoming_arcs.remove(self)
             
         def __getitem__(self, key):
             return self.outgoing_arcs[key]
@@ -181,4 +179,5 @@ if __name__ == '__main__':
     sequences -= 1 # job one has to be 0, etc.
         
     graph = DisjunctiveGraph(pij_matrix, sequences)
+    graph.has_cycles()
     print(graph.longest_path(graph.start, graph.end))
