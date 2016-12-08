@@ -1,8 +1,6 @@
 import numpy as np
 import sys
 
-from floyd_warshall import floyd_warshall
-
 class DisjunctiveGraph:
     def __init__(self, pij_matrix, sequences):
         """
@@ -161,6 +159,29 @@ class DisjunctiveGraph:
                 outgoings = [str(node) for node in self.outgoing_arcs]
                 outgoings = ','.join(outgoings)
                 return 'M{}J{}  conj:({})'.format(self.machine+1, self.job+1, outgoings)
+                
+                
+def floyd_warshall(adj):
+    """
+    Implementation of Floyd n Warshall's algorithm for finding the shortest path distance matrix for all pairs
+    This implementation also deals with directed graph.
+    Returns: A distance matrix nxn
+    """
+    n = len(adj)
+    #initialisiere das drei-dimensionale array dist:
+    dist = np.zeros((n,n,n+1))
+    combinations = [(i,j) for i in range(n) for j in range(n)]
+    for i,j in combinations:
+            dist[i][j][0] = adj[i,j]
+            
+    #starte mit der rekursion:
+    for k in range(n):
+            for i, j in combinations:
+                    dist[i, j, k+1] = min(dist[i, j, k], dist[i, k, k] + dist[k, j, k])
+    
+    #fertig, in letzter dimension der distance matrix stehen nun die eintraege:
+    final_dist = [ [dist[i][j][n] for j in range(n)] for i in range(n) ]
+    return np.array(final_dist)
         
         
 if __name__ == '__main__':

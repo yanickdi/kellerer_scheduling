@@ -1,8 +1,28 @@
+#https://repl.it/Ekpq/1
+
 import sys
 from collections import deque
 import numpy as np
 
 from disjunctive_graph import DisjunctiveGraph
+
+def main():
+    _ = 0
+    pij_matrix = np.array([
+        [10,  3,  4], #Machine 1
+        [ 8,  8,  7], #Machine 2
+        [ 4,  6,  _], #Machine 4
+        [ _,  5,  3]])#Machine 3
+        
+    sequences = np.array([
+        [1,2,3, _], #Job 1
+        [2,1,4,3], #Job 2
+        [1,2,4, _]])   #Job 3
+    sequences -= 1 # job one has to be 0, etc.
+        
+    graph = DisjunctiveGraph(pij_matrix, sequences)
+    bnb = FlowShopBnb(graph, start_upper_bound=50)
+    bnb.solve()
 
 class FlowShopBnb():
     def __init__(self, disj_graph, start_upper_bound=None):
@@ -102,27 +122,3 @@ class FlowShopBnb():
                 return 'ROOT'
             str_fixed = ['({},{})'.format(op.machine+1, op.job+1) for op in self.fixed]
             return ' , '.join(str_fixed)
-        
-if __name__ == '__main__':
-    _ = 0
-    pij_matrix = np.array([
-        [10,  3,  4], #Machine 1
-        [ 8,  8,  7], #Machine 2
-        [ 4,  6,  _], #Machine 4
-        [ _,  5,  3]])#Machine 3
-        
-    sequences = np.array([
-        [1,2,3, _], #Job 1
-        [2,1,4,3], #Job 2
-        [1,2,4, _]])   #Job 3
-    sequences -= 1 # job one has to be 0, etc.
-        
-    graph = DisjunctiveGraph(pij_matrix, sequences)
-    bnb = FlowShopBnb(graph, start_upper_bound=500)
-    bnb.solve()
-    
-    first = graph.findOperation(0,0)
-    sec = graph.findOperation(0,2)
-    third = graph.findOperation(1,2)
-    #bnbnode = FlowShopBnb.Node(None, [first, sec, third], bnb)
-    #bnb.bound_at_node(bnbnode)
